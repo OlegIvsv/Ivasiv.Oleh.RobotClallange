@@ -12,12 +12,24 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         public static int FindDistance(Position a, Position b)
             => (int)(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
 
+
+        public static bool IsFreeStation(EnergyStation station, Robot.Common.Robot movingRobot, IList<Robot.Common.Robot> robots)
+            =>  IsFreeCell(station.Position, movingRobot, robots);
+        public static bool IsFreeCell(Position cell, Robot.Common.Robot movingRobot, IList<Robot.Common.Robot> robots)
+        {
+            foreach (var robot in robots)
+                if (robot != movingRobot)
+                    if (robot.Position == cell)
+                        return false;
+            return true;
+        }
+
         public static Position FindNearestFreeStation(Robot.Common.Robot movingRobot, Map map, IList<Robot.Common.Robot> robots)
         {
             EnergyStation nearest = null;
             int minDistance = int.MaxValue;
             foreach (var station in map.Stations)
-                if (IsStationFree(station, movingRobot, robots))
+                if (IsFreeStation(station, movingRobot, robots))
                 {
                     int d = FindDistance(station.Position, movingRobot.Position);
                     if (d < minDistance)
@@ -28,42 +40,58 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
                 }
             return nearest == null ? null : nearest.Position;
         }
-
-        public static bool IsStationFree(EnergyStation station, Robot.Common.Robot movingRobot, IList<Robot.Common.Robot> robots)
-            =>  IsCellFree(station.Position, movingRobot, robots);
-
-        public static bool IsCellFree(Position cell, Robot.Common.Robot movingRobot, IList<Robot.Common.Robot> robots)
+        public static EnergyStation TheRobotOnAStation(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
-            foreach (var robot in robots)
-                if (robot != movingRobot)
-                    if (robot.Position == cell)
-                        return false;
-            return true;
+            return map.Stations.FirstOrDefault(s => s.Position == myRobot.Position);
         }
 
-        public static bool TheRobotOnTheStation(Robot.Common.Robot robot, EnergyStation station)
+
+        public static List<Robot.Common.Robot> Enemies(List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
-            throw new NotImplementedException();
+            return robots.Where(r => r.OwnerName != myRobot.OwnerName)
+                .ToList();
+        }
+        public static List<Robot.Common.Robot> Family(List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
+        {
+            return robots.Where(r => r.OwnerName == myRobot.OwnerName)
+               .ToList();
+        }
+        public static bool IsFamily(Robot.Common.Robot robot, Robot.Common.Robot myRobot)
+        {
+            return robot.OwnerName == myRobot.OwnerName;
+        }
+        public static bool IsEnemy(Robot.Common.Robot robot, Robot.Common.Robot myRobot)
+        {
+            return !IsFamily(robot, myRobot);
         }
 
-        public static List<Robot.Common.Robot> Enemies(List<Robot.Common.Robot> robots)
+
+        public static List<EnergyStation> FreeStations(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
-            throw new NotImplementedException();
+            return map.Stations.Where(s => IsFreeStation(s, myRobot, robots)).ToList();
+        }
+        public static List<EnergyStation> OccupiedStations(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
+        {
+            return map.Stations.Where(s => !IsFreeStation(s, myRobot, robots)).ToList();
         }
 
-        public static List<Robot.Common.Robot> Family(List<Robot.Common.Robot> robots)
+        public static List<EnergyStation> OccupiedByFamilyStations(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
-            throw new NotImplementedException();
-        }
+            var occupied = OccupiedStations(map, robots, myRobot);
 
-        public static List<EnergyStation> FreeStations(Map map, List<Robot.Common.Robot> robots)
-        {
-            throw new NotImplementedException();
-        }
+            var familyPossitions = Family(robots, myRobot).Select(r => r.Position);
 
-        public static List<EnergyStation> OccupiedStations(Map map, List<Robot.Common.Robot> robots)
+            return occupied.Where(s => familyPossitions.Contains(s.Position))
+                .ToList(); 
+        }
+        public static List<EnergyStation> OccupiedByEnemiesStations(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
-            throw new NotImplementedException();
+            var occupied = OccupiedStations(map, robots, myRobot);
+
+            var enemiesPossitions = Enemies(robots, myRobot).Select(r => r.Position);
+
+            return occupied.Where(s => enemiesPossitions.Contains(s.Position))
+                .ToList();
         }
     }
 }
