@@ -74,7 +74,11 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         {
             return map.Stations.Where(s => !IsFreeStation(s, myRobot, robots)).ToList();
         }
-
+        public static List<EnergyStation> StationsCanBeOccupied(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
+        {
+            var occupiedByFamily = OccupiedByFamilyStations(map, robots, myRobot);
+            return map.Stations.Except(occupiedByFamily).ToList();
+        }
         public static List<EnergyStation> OccupiedByFamilyStations(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
             var occupied = OccupiedStations(map, robots, myRobot);

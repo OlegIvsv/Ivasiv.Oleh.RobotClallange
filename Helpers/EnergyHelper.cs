@@ -7,22 +7,6 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
 {
     public static class EnergyHelper
     {
-
-        public static List<EnergyStation> StationsCanBeOccupied(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
-        {
-            var occupiedByFamily = Intelligence.OccupiedByFamilyStations(map, robots, myRobot);
-            return map.Stations.Except(occupiedByFamily).ToList();
-        }
-
-
-        public static int CanGetToWith(Position newPosition, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
-        {
-            int energyLoss = EnergyToGetTo(newPosition, myRobot.Position);
-            if (!Intelligence.IsFreeCell(newPosition, myRobot, robots))
-                energyLoss += Details.AttackEnergyLoss;
-            return energyLoss;
-        }
-
         public static int EnergyToGetTo(Position newPosition, Position currentPosition)
         {
             int Min2D(int x1, int x2)
@@ -36,6 +20,13 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             }
 
             return Min2D(currentPosition.X, newPosition.X) + Min2D(currentPosition.Y, newPosition.Y);
+        }
+        public static int CanGetToWith(Position newPosition, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
+        {
+            int energyLoss = EnergyToGetTo(newPosition, myRobot.Position);
+            if (!Intelligence.IsFreeCell(newPosition, myRobot, robots))
+                energyLoss += Details.AttackEnergyLoss;
+            return energyLoss;
         }
 
 
@@ -53,7 +44,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
 
         public static EnergyStation MostBenneficialStation(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
-            var canBeOccupied = StationsCanBeOccupied(map, robots, myRobot);
+            var canBeOccupied = Intelligence.StationsCanBeOccupied(map, robots, myRobot);
             canBeOccupied = canBeOccupied
                 .Except(canBeOccupied.Where(s => CanGetToWith(s.Position, robots, myRobot) > myRobot.Energy)
                             .ToArray())
@@ -69,7 +60,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         {
             try
             {
-                int recomendedStationPathCosts = StationsCanBeOccupied(map, robots, myRobot)
+                int recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
                     .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
                     .OrderBy(el => el.Key)
                     .FirstOrDefault().Key;
@@ -86,7 +77,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         {
             try
             {
-                var recomendedStations = StationsCanBeOccupied(map, robots, myRobot)
+                var recomendedStations = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
                     .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
                     .OrderBy(el => el.Key)
                     .ToArray();
@@ -100,7 +91,5 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
                 throw new Exception("Can't execute ThenMinEnergyFromHereToStation.");
             }
         }
-
-
     }
 }
