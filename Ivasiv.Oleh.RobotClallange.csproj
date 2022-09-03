@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Details.cs" />
+    <Compile Include="Helpers\DirectionHelper.cs" />
     <Compile Include="Helpers\EnergyHelper.cs" />
     <Compile Include="Helpers\Intelligence .cs" />
     <Compile Include="OlehIvasivAlgorithm.cs" />

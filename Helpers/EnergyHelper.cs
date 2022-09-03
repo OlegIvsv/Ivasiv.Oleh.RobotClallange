@@ -29,7 +29,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             return energyLoss;
         }
 
-
+        
         public static int EnergyOnSquare(Position upperLeftPoint, Position lowerRightPoint, Map map)
         {
             Predicate<EnergyStation> isIn = s => s.Position.X >= upperLeftPoint.X
@@ -46,22 +46,26 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         {
             var canBeOccupied = Intelligence.StationsCanBeOccupied(map, robots, myRobot);
             canBeOccupied = canBeOccupied
-                .Except(canBeOccupied.Where(s => CanGetToWith(s.Position, robots, myRobot) > myRobot.Energy)
-                            .ToArray())
-                .OrderBy(s => CanGetToWith(s.Position, robots, myRobot))
+                .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
+                .Where(g => g.Key > myRobot.Energy)
+                .OrderBy(g => g.Key)
+                .First()
                 .ToList();
                            
-
             return canBeOccupied.First();
         }
 
-
+        // TODO : take into account that it can be used only for computing child minimum energy, not a parent
         public static int MinEnergyFromHereToStation(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
+            var myRobotCloneLikeChild = new Robot.Common.Robot
+            {
+                Position = map.FindFreeCell(myRobot.Position, robots),
+            };
             try
             {
                 int recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
-                    .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
+                    .GroupBy(s => CanGetToWith(s.Position, robots, myRobotCloneLikeChild))
                     .OrderBy(el => el.Key)
                     .FirstOrDefault().Key;
 
@@ -69,7 +73,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             }
             catch(Exception ex)
             {
-                throw new Exception("Can't execute MinEnergyFromHereToStation.");
+                throw new Exception("Can't execute MinEnergyFromHereToStation:" + ex.Message);
             }
         }
 
@@ -88,7 +92,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             }
             catch(Exception ex)
             {
-                throw new Exception("Can't execute ThenMinEnergyFromHereToStation.");
+                throw new Exception("Can't execute ThenMinEnergyFromHereToStation:" + ex.Message);
             }
         }
     }
