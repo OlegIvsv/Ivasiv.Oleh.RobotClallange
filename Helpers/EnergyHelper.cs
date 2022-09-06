@@ -30,29 +30,19 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         }
 
         
-        public static int EnergyOnSquare(Position upperLeftPoint, Position lowerRightPoint, Map map)
-        {
-            Predicate<EnergyStation> isIn = s => s.Position.X >= upperLeftPoint.X
-                && s.Position.Y >= upperLeftPoint.Y
-                && s.Position.X <= lowerRightPoint.X
-                && s.Position.Y <= lowerRightPoint.Y;
-            return map.Stations.Where(s => isIn(s))
-                .Select(s => s.Energy)
-                .Sum();
-        }
-
-
+        // TODO: take into account enemies
         public static EnergyStation MostBenneficialStation(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
             var canBeOccupied = Intelligence.StationsCanBeOccupied(map, robots, myRobot);
             canBeOccupied = canBeOccupied
-                .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
-                .Where(g => g.Key > myRobot.Energy)
+                .GroupBy(s => DirectionHelper.EnergyLoss(myRobot.Position, s.Position))
+                .Where(g => g.Key <= myRobot.Energy)
                 .OrderBy(g => g.Key)
-                .First()
-                .ToList();
-                           
-            return canBeOccupied.First();
+                .FirstOrDefault()
+                ?.ToList();
+                   
+            var res = canBeOccupied?.FirstOrDefault();
+            return res;
         }
 
         // TODO : take into account that it can be used only for computing child minimum energy, not a parent
@@ -64,12 +54,14 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             };
             try
             {
-                int recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
-                    .GroupBy(s => CanGetToWith(s.Position, robots, myRobotCloneLikeChild))
-                    .OrderBy(el => el.Key)
-                    .FirstOrDefault().Key;
+                var recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
+                    .GroupBy(s => DirectionHelper.EnergyLoss(myRobotCloneLikeChild.Position, s.Position))
+                    .OrderBy(el => el.Key).ToArray();
+                int res = recomendedStationPathCosts
+                    .FirstOrDefault()
+                    ?.Key ?? -1;
 
-                return recomendedStationPathCosts;
+                return res;
             }
             catch(Exception ex)
             {
@@ -82,13 +74,15 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             try
             {
                 var recomendedStations = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
-                    .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
+                    .GroupBy(s => DirectionHelper.EnergyLoss(myRobot.Position, s.Position))
                     .OrderBy(el => el.Key)
                     .ToArray();
 
                 if (recomendedStations[0].Count() > 1)
                     return recomendedStations[0].Key;
-                return recomendedStations[1].Key;
+                if (recomendedStations.Length > 1)
+                    return recomendedStations[1].Key;
+                return -1;
             }
             catch(Exception ex)
             {

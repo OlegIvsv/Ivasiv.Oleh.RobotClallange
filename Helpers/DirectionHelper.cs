@@ -17,5 +17,14 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
 
             return result;
         }
+
+        public static int EnergyLoss(Position start, Position end)
+        {
+            var res = Math.Max(
+                Math.Abs(end.X - start.X),
+                Math.Abs(end.Y - start.Y)
+                );
+            return res;
+        }
     }
 }

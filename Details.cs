@@ -20,12 +20,27 @@ namespace Ivasiv.Oleh.RobotClallange
         public const int AttackEnergyLoss = 10;
         public const double StoleRateEnergyAtAttack = 0.0;
 
-        // personal
-        public const double CreateOneMoreIfCoef = 2.0;
-        public const int EnergyLeaveForParent = 100;
 
-        // noticed
+
+        // general
         public const double NewRobotDefaultEnergy = 100;
         public const int MaxRobotCount = 100;
+        public const int NumOfRounds = 50;
+
+
+        //personal
+        public const int StopCreatingChildsAfter = 40;
+
+
+        // Round counting
+        public static int CurrentRound { get; private set; }
+        static Details()
+        {
+            Logger.OnLogRound += Logger_OnLogRound;
+        }
+        private static void Logger_OnLogRound(object sender, LogRoundEventArgs e)
+        {
+            CurrentRound = e.Number;
+        }
     }
 }

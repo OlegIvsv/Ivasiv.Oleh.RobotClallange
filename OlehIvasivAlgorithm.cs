@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace Ivasiv.Oleh.RobotClallange
 
         public OlehIvasivAlgorithm()
         {
+            
         }
 
 
@@ -53,37 +55,43 @@ namespace Ivasiv.Oleh.RobotClallange
             throw new Exception();
         }
 
-
+        //TODO: check if the cell is occupied not to attack
+        //TODO: check if the station have no energy
+        //TODO: make it move through the botrders
 
         protected CreateNewRobotCommand IfCreateNewRobot(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
+            if (Details.CurrentRound > Details.StopCreatingChildsAfter)
+                return null;
+            return IfCreateRobotIsNotTooLate(map, myRobot, robots);
+        }
+
+        protected CreateNewRobotCommand IfCreateRobotIsNotTooLate(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
+        {
+            if (Intelligence.Family(robots, myRobot).Count() >= 100)
+                return null;
+
             try
             {
-                int energyINeedIfICreate = EnergyToSuriveMyself(map, myRobot, robots);
-                int energyChildNeed = CanCreateChildWithEnergy(map, myRobot, robots);
+                int distanceINeedIfICreate = EnergyHelper.ThenMinEnergyFromHereToStation(map, myRobot, robots);
+                if (distanceINeedIfICreate < 0)
+                    distanceINeedIfICreate = Int32.MaxValue;
+
+                int distanceChildNeed = EnergyHelper.MinEnergyFromHereToStation(map, myRobot, robots);
+                if (distanceChildNeed < 0)
+                    distanceChildNeed = Int32.MaxValue;
 
                 bool iShouldCreate = Intelligence.TheRobotOnAStation(map, robots, myRobot) == null
-               ? myRobot.Energy > energyINeedIfICreate + energyChildNeed
-               : myRobot.Energy >= energyChildNeed;
+               ? myRobot.Energy > distanceINeedIfICreate + distanceChildNeed + Details.EnergyLossToCreateNewRobot
+               : myRobot.Energy >= distanceChildNeed + Details.EnergyLossToCreateNewRobot;
 
-                return CreateCommandForChildCreting(iShouldCreate, energyChildNeed);
+                return CreateCommandForChildCreting(iShouldCreate, distanceChildNeed);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new ArithmeticException("Cannot canlculate required robot energy:" + ex.Message);
             }
         }
-
-        protected int CanCreateChildWithEnergy(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
-        {
-            return Details.EnergyLossToCreateNewRobot + EnergyHelper.MinEnergyFromHereToStation(map, myRobot, robots);
-        }
-
-        protected int EnergyToSuriveMyself(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
-        {
-            return EnergyHelper.ThenMinEnergyFromHereToStation(map, myRobot, robots);
-        }
-
         protected CreateNewRobotCommand CreateCommandForChildCreting(bool iShouldCreate, int energyForChild)
         {
             if (iShouldCreate)
@@ -103,7 +111,7 @@ namespace Ivasiv.Oleh.RobotClallange
                 var mostBeneficialStation = EnergyHelper.MostBenneficialStation(map, myRobot, robots);
                 var currentStation = Intelligence.TheRobotOnAStation(map, robots, myRobot);
                 bool shouldChange = ShouldChange(currentStation, mostBeneficialStation);
-                return CreateCommandForEnergyCollecting(shouldChange, mostBeneficialStation, myRobot);
+                return CreateCommandForEnergyCollecting(shouldChange, mostBeneficialStation?.Position, myRobot.Position);
             }
             catch (Exception ex)
             {
@@ -111,24 +119,28 @@ namespace Ivasiv.Oleh.RobotClallange
             }
         }
 
-        protected bool ShouldChange(EnergyStation currentStation, EnergyStation mostBeneficialStation)
+        //TODO: rewrite this
+        protected bool ShouldChange(EnergyStation currentStation, EnergyStation newStation)
         {
+            if (newStation == null)
+                return false;
+
             bool shouldChange = false;
             if (currentStation == null)
                 shouldChange = true;
             else
                 shouldChange = currentStation.Energy <= Details.MaxEnergyGrowth
-                    && mostBeneficialStation.Energy > Details.MaxEnergyGrowth;
+                    && newStation.Energy > Details.MaxEnergyGrowth;
 
             return shouldChange;
         }
 
-        protected RobotCommand CreateCommandForEnergyCollecting(bool shouldChange, EnergyStation mostBeneficialStation, Robot.Common.Robot myRobot)
+        protected RobotCommand CreateCommandForEnergyCollecting(bool shouldChange, Position stationPos,Position robotPos)
         {
             if (shouldChange)
                 return new MoveCommand()
                 {
-                    NewPosition = DirectionHelper.NextPosition(myRobot.Position, mostBeneficialStation.Position)
+                    NewPosition = DirectionHelper.NextPosition(robotPos, stationPos)
                 };
             return new CollectEnergyCommand();
         }
