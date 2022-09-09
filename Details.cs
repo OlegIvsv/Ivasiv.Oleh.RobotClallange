@@ -11,12 +11,12 @@ namespace Ivasiv.Oleh.RobotClallange
     {
         // variant
         public const int MaxStationEnergy = 5000;
-        public const int MaxEnergyGrowth = 40;
-        public const int MinEnergyGrowth = 20;
+        public const int MaxEnergyGrowth = 100;
+        public const int MinEnergyGrowth = 50;
         public const int EnergyStationForAttendant = 5;
-        public const int CollectingDistance = 1;
+        public const int CollectingDistance = 3;
         public const int MaxEnergyCanCollect = 200;
-        public const int EnergyLossToCreateNewRobot = 100;
+        public const int EnergyLossToCreateNewRobot = 50;
         public const int AttackEnergyLoss = 10;
         public const double StoleRateEnergyAtAttack = 0.0;
 
@@ -26,10 +26,12 @@ namespace Ivasiv.Oleh.RobotClallange
         public const double NewRobotDefaultEnergy = 100;
         public const int MaxRobotCount = 100;
         public const int NumOfRounds = 50;
+        public const int BoardSize = 100;
 
 
         //personal
-        public const int StopCreatingChildsAfter = 40;
+        public const int StopCreatingChildsAfter = 37;
+        public const int GenerosityPoint = 650;
 
 
         // Round counting
