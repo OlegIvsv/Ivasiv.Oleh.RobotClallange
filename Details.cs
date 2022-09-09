@@ -21,7 +21,6 @@ namespace Ivasiv.Oleh.RobotClallange
         public const double StoleRateEnergyAtAttack = 0.0;
 
 
-
         // general
         public const double NewRobotDefaultEnergy = 100;
         public const int MaxRobotCount = 100;
@@ -31,7 +30,8 @@ namespace Ivasiv.Oleh.RobotClallange
 
         //personal
         public const int StopCreatingChildsAfter = 37;
-        public const int GenerosityPoint = 650;
+        public const int FamilySizeLimit = 80;
+        public const int StopChangingStations = 45;
 
 
         // Round counting

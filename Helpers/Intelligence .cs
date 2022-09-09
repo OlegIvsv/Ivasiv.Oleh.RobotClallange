@@ -14,14 +14,18 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         public static bool IsFreeCell(Position cell, Robot.Common.Robot movingRobot, IList<Robot.Common.Robot> robots)
         {
             foreach (var robot in robots)
-                if (robot != movingRobot)
-                    if (robot.Position == cell)
-                        return false;
+                if (robot.Position == cell)
+                    return false;
             return true;
         }
         public static EnergyStation TheRobotOnAStation(Map map, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
             return map.Stations.FirstOrDefault(s => s.Position == myRobot.Position);
+        }
+        public static bool OccupiedByEnemie(List<Robot.Common.Robot> robots, Position pos)
+        {
+            return robots.Where(r => r.Position == pos)
+                .Count() > 0;
         }
 
 

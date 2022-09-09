@@ -51,6 +51,8 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         }
         public static int FindStepNumber(Position p1, Position p2, int energy)
         {
+            if(energy <= 0)
+                return int.MaxValue;
             int steps = 1;
             int xLinearDistance = GetXDistance(p1, p2);
             int yLinearDistance = GetYDistance(p1, p2);
@@ -68,7 +70,6 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             }
             return energy;
         }
-
        
         public static int GetXDistance(Position p1, Position p2)
         {

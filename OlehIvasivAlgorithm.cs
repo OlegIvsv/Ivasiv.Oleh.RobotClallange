@@ -57,14 +57,16 @@ namespace Ivasiv.Oleh.RobotClallange
 
         //TODO: check if the cell is occupied not to attack
         //TODO: check if the station have no energy
-
+        //TODO: fix not enough energy to collect resource
         protected CreateNewRobotCommand IfCreateNewRobot(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
             if (Details.CurrentRound > Details.StopCreatingChildsAfter)
                 return null;
             if (Intelligence.TheRobotOnAStation(map, robots,myRobot) == null)
                 return null;
-            if (Intelligence.Family(robots, myRobot).Count() >= 100)
+            if (Intelligence.Family(robots, myRobot).Count() >= Details.FamilySizeLimit)
+                return null;
+            if (myRobot.Energy < Details.EnergyLossToCreateNewRobot)
                 return null;
 
             return IfChildCanBeCreated(map, myRobot, robots);
@@ -74,16 +76,9 @@ namespace Ivasiv.Oleh.RobotClallange
         {
             try
             {
-                int childNeed = EnergyHelper.ChildWillNeed(map, myRobot, robots);
-                if (childNeed < 0)
-                    childNeed = Int32.MaxValue;
-
-                bool iShouldCreate = myRobot.Energy >= childNeed + Details.EnergyLossToCreateNewRobot;
-
-                if (myRobot.Energy >= Details.GenerosityPoint)
-                    childNeed += myRobot.Energy - Details.GenerosityPoint;
-
-                return CreateCommandForChildCreting(iShouldCreate, childNeed);
+                bool childCanSurvive = EnergyHelper.ChildCanSurvive(map, myRobot, robots);
+                int childNeed = myRobot.Energy - Details.EnergyLossToCreateNewRobot - 1;
+                return CreateCommandForChildCreting(childCanSurvive, childNeed);
             }
             catch (Exception ex)
             {
@@ -102,7 +97,7 @@ namespace Ivasiv.Oleh.RobotClallange
         }
 
 
-
+        //TODO: take into account station radius
         protected RobotCommand IfLookForEnergy(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
             try
@@ -122,13 +117,15 @@ namespace Ivasiv.Oleh.RobotClallange
         {
             bool shouldChange = false;
 
-            if (newStation == null)
+            if(newStation == null)
                 return false;
-            if (currentStation == null)
-                shouldChange = true;
-            else
-                shouldChange = currentStation.Energy <= Details.MinEnergyGrowth
-                    && newStation.Energy >= 2 * Details.MaxEnergyGrowth;
+            if(currentStation == null)
+                return true;
+            if(Details.CurrentRound >= Details.StopChangingStations)
+                return false;
+
+            shouldChange = currentStation.Energy <= Details.MinEnergyGrowth
+                && newStation.Energy >= 0.5 * Details.MaxStationEnergy;
 
             return shouldChange;
         }
