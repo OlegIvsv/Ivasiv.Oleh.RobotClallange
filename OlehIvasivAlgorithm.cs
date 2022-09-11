@@ -16,10 +16,21 @@ namespace Ivasiv.Oleh.RobotClallange
     {
         public string Author => "Oleh Ivasiv";
 
+
+
+        private static int IdCounter = 1;
+        public static int Id { get; private set; }
+        public static Dictionary<int, Position> Aims; 
         public OlehIvasivAlgorithm()
         {
-            
+            Id = IdCounter;
+            ++IdCounter;
         }
+        static OlehIvasivAlgorithm()
+        {
+            aims = new Dictionary<int, Position>();
+        }
+
 
 
         public RobotCommand DoStep(IList<Robot.Common.Robot> robots, int robotToMoveIndex, Map map)
