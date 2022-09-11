@@ -35,6 +35,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         public static EnergyStation MostBenneficialStation(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
            var recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
+                    .Where(s => !OlehIvasivAlgorithm.Aims.ContainsValue(s.Position))
                     .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
                     .OrderBy(el => el.Key)
                     .ToArray();
@@ -54,13 +55,17 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
             var myRobotCloneLikeChild = new Robot.Common.Robot
             {
                 Position = map.FindFreeCell(myRobot.Position, robots),
+                OwnerName = myRobot.OwnerName
             };
+
             var recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
+                .Where(s => !OlehIvasivAlgorithm.Aims.ContainsValue(s.Position))
                 .Where(
                     s => DirectionHelper.FindStepNumber(
                             myRobotCloneLikeChild.Position, 
                             s.Position, 
-                            myRobot.Energy - Details.EnergyLossToCreateNewRobot
+                            myRobot.Energy - Details.EnergyLossToCreateNewRobot 
+                                - (Intelligence.IsFreeStation(s, myRobotCloneLikeChild, robots) ? 0 : Details.AttackEnergyLoss)
                     ) <= Details.MaxStepsForChild
                 ) 
                 .GroupBy(s => CanGetToWith(myRobotCloneLikeChild.Position, robots, myRobotCloneLikeChild))

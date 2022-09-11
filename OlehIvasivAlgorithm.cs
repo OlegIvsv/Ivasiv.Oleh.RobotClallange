@@ -15,12 +15,14 @@ namespace Ivasiv.Oleh.RobotClallange
     public class OlehIvasivAlgorithm : IRobotAlgorithm
     {
         public string Author => "Oleh Ivasiv";
+        private Map CurrentMap { get; set; }
+        private List<Robot.Common.Robot> CurrentRobots { get; set; }
 
 
 
         private static int IdCounter = 1;
         public static int Id { get; private set; }
-        public static Dictionary<int, Position> Aims; 
+        public static Dictionary<int, Position> Aims { get; private set; }
         public OlehIvasivAlgorithm()
         {
             Id = IdCounter;
@@ -28,7 +30,7 @@ namespace Ivasiv.Oleh.RobotClallange
         }
         static OlehIvasivAlgorithm()
         {
-            aims = new Dictionary<int, Position>();
+            Aims = new Dictionary<int, Position>();
         }
 
 
@@ -36,32 +38,22 @@ namespace Ivasiv.Oleh.RobotClallange
         public RobotCommand DoStep(IList<Robot.Common.Robot> robots, int robotToMoveIndex, Map map)
         {
             var myRobot = robots[robotToMoveIndex];
+            CurrentMap = map;
+            CurrentRobots = robots.ToList();
 
             // create a new robot if it's possible
-            try
-            {
-                var createRobotCommand = IfCreateNewRobot(map, myRobot, robots.ToList());
+            var createRobotCommand = IfCreateNewRobot(myRobot);
 
-                if (createRobotCommand != null)
-                    return createRobotCommand;
-            }
-            catch(Exception ex)
-            {
-                throw new ApplicationException("Cannot check if create new robot:" + ex.Message);
-            }
+            if (createRobotCommand != null)
+                return createRobotCommand;
+
 
             // find station if it's needed
-            try
-            {
-                var moveToStationCommand = IfLookForEnergy(map, myRobot, robots.ToList());
+            var moveToStationCommand = IfLookForEnergy(myRobot);
 
-                if (moveToStationCommand != null)
-                    return moveToStationCommand;
-            }
-            catch (Exception ex)
-            {
-                throw new ApplicationException("Cannot check if look for energy:" + ex.Message);
-            }
+            if (moveToStationCommand != null)
+                return moveToStationCommand;
+        
 
             throw new Exception();
         }
@@ -69,59 +61,42 @@ namespace Ivasiv.Oleh.RobotClallange
         //TODO: check if the cell is occupied not to attack
         //TODO: check if the station have no energy
         //TODO: fix not enough energy to collect resource
-        protected CreateNewRobotCommand IfCreateNewRobot(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
+        protected CreateNewRobotCommand IfCreateNewRobot(Robot.Common.Robot myRobot)
         {
             if (Details.CurrentRound > Details.StopCreatingChildsAfter)
                 return null;
-            if (Intelligence.TheRobotOnAStation(map, robots,myRobot) == null)
+            if (Intelligence.TheRobotOnAStation(CurrentMap, CurrentRobots, myRobot) == null)
                 return null;
-            if (Intelligence.Family(robots, myRobot).Count() >= Details.FamilySizeLimit)
+            if (Intelligence.Family(CurrentRobots, myRobot).Count() >= Details.FamilySizeLimit)
                 return null;
             if (myRobot.Energy < Details.EnergyLossToCreateNewRobot)
                 return null;
 
-            return IfChildCanBeCreated(map, myRobot, robots);
+            return IfChildCanBeCreated(myRobot);
         }
 
-        protected CreateNewRobotCommand IfChildCanBeCreated(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
+        protected CreateNewRobotCommand IfChildCanBeCreated(Robot.Common.Robot myRobot)
         {
-            try
-            {
-                bool childCanSurvive = EnergyHelper.ChildCanSurvive(map, myRobot, robots);
-                int childNeed = myRobot.Energy - Details.EnergyLossToCreateNewRobot - 1;
-                return CreateCommandForChildCreting(childCanSurvive, childNeed);
-            }
-            catch (Exception ex)
-            {
-                throw new ArithmeticException("Cannot canlculate required robot energy:" + ex.Message);
-            }
+            bool childCanSurvive = EnergyHelper.ChildCanSurvive(CurrentMap, myRobot, CurrentRobots);
+            int childNeed = myRobot.Energy - Details.EnergyLossToCreateNewRobot - 1;
+            return CreateCommandForChildCreting(childCanSurvive, childNeed);
         }
 
         protected CreateNewRobotCommand CreateCommandForChildCreting(bool iShouldCreate, int energyForChild)
         {
             if (iShouldCreate)
-                return new CreateNewRobotCommand()
-                {
-                    NewRobotEnergy = energyForChild
-                };
+                return new CreateNewRobotCommand() { NewRobotEnergy = energyForChild };
             return null;
         }
 
 
         //TODO: take into account station radius
-        protected RobotCommand IfLookForEnergy(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
+        protected RobotCommand IfLookForEnergy(Robot.Common.Robot myRobot)
         {
-            try
-            {
-                var mostBeneficialStation = EnergyHelper.MostBenneficialStation(map, myRobot, robots);
-                var currentStation = Intelligence.TheRobotOnAStation(map, robots, myRobot);
-                bool shouldChange = ShouldChange(currentStation, mostBeneficialStation);
-                return CreateCommandForEnergyCollecting(shouldChange, mostBeneficialStation?.Position, myRobot);
-            }
-            catch (Exception ex)
-            {
-                throw new ArithmeticException("Cannot choose the station to move:" + ex.Message);
-            }
+            var mostBeneficialStation = EnergyHelper.MostBenneficialStation(CurrentMap, myRobot, CurrentRobots);
+            var currentStation = Intelligence.TheRobotOnAStation(CurrentMap, CurrentRobots, myRobot);
+            bool shouldChange = ShouldChange(currentStation, mostBeneficialStation);
+            return CreateCommandForEnergyCollecting(shouldChange, mostBeneficialStation?.Position, myRobot);
         }
 
         protected bool ShouldChange(EnergyStation currentStation, EnergyStation newStation)
@@ -144,11 +119,26 @@ namespace Ivasiv.Oleh.RobotClallange
         protected RobotCommand CreateCommandForEnergyCollecting(bool shouldChange, Position stationPos, Robot.Common.Robot robot)
         {
             if (shouldChange)
+            {
+                var newPosition = DirectionHelper.NextPosition(robot, stationPos);
+                SetAim(stationPos, newPosition, robot);
                 return new MoveCommand()
                 {
                     NewPosition = DirectionHelper.NextPosition(robot, stationPos)
                 };
+            }
             return new CollectEnergyCommand();
+        }
+
+        protected void SetAim(Position aimPosition, Position newPosition, Robot.Common.Robot robot)
+        {
+            int robotIndex = CurrentRobots.IndexOf(robot);
+            Aims.Remove(robotIndex);
+            
+            if (aimPosition == newPosition)
+                return;
+            
+            Aims.Add(robotIndex, aimPosition);
         }
     }
 }

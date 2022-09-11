@@ -13,7 +13,6 @@ namespace Ivasiv.Oleh.RobotClallange
         public const int MaxStationEnergy = 5000;
         public const int MaxEnergyGrowth = 100;
         public const int MinEnergyGrowth = 50;
-        public const int EnergyStationForAttendant = 5;
         public const int CollectingDistance = 3;
         public const int MaxEnergyCanCollect = 200;
         public const int EnergyLossToCreateNewRobot = 50;
@@ -29,10 +28,11 @@ namespace Ivasiv.Oleh.RobotClallange
 
 
         //personal
-        public const int StopCreatingChildsAfter = 37;
-        public const int FamilySizeLimit = 80;
+        public const int StopCreatingChildsAfter = 40;
+        public const int FamilySizeLimit = 85;
         public const int StopChangingStations = 45;
-        public const int MaxStepsForChild = 4;
+        public const int MaxStepsForChild = 7;
+
 
 
         // Round counting
