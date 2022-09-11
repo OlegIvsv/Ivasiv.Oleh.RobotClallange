@@ -32,6 +32,7 @@ namespace Ivasiv.Oleh.RobotClallange
         public const int StopCreatingChildsAfter = 37;
         public const int FamilySizeLimit = 80;
         public const int StopChangingStations = 45;
+        public const int MaxStepsForChild = 4;
 
 
         // Round counting

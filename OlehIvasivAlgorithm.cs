@@ -112,7 +112,7 @@ namespace Ivasiv.Oleh.RobotClallange
                 throw new ArithmeticException("Cannot choose the station to move:" + ex.Message);
             }
         }
-        //TODO: rewrite this
+
         protected bool ShouldChange(EnergyStation currentStation, EnergyStation newStation)
         {
             bool shouldChange = false;

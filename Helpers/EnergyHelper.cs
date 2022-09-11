@@ -25,7 +25,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         public static int CanGetToWith(Position newPosition, List<Robot.Common.Robot> robots, Robot.Common.Robot myRobot)
         {
             int energyLoss = EnergyToGetTo(myRobot.Position, newPosition);
-            if (!Intelligence.OccupiedByEnemie(robots, newPosition))
+            if (Intelligence.OccupiedByEnemie(robots, newPosition))
                 energyLoss += Details.AttackEnergyLoss;
 
             return energyLoss;
@@ -35,7 +35,7 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
         public static EnergyStation MostBenneficialStation(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
            var recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
-                    .GroupBy(s => CanGetToWith(s.Position, robots, myRobot)) //TODO: change
+                    .GroupBy(s => CanGetToWith(s.Position, robots, myRobot))
                     .OrderBy(el => el.Key)
                     .ToArray();
 
@@ -51,34 +51,24 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
 
         public static bool ChildCanSurvive(Map map, Robot.Common.Robot myRobot, List<Robot.Common.Robot> robots)
         {
-            try
+            var myRobotCloneLikeChild = new Robot.Common.Robot
             {
-                Robot.Common.Robot myRobotCloneLikeChild = new Robot.Common.Robot
-                {
-                    Position = map.FindFreeCell(myRobot.Position, robots),
-                };
-                var recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
-                    .Where(
-                        s => DirectionHelper.FindStepNumber(
-                                myRobotCloneLikeChild.Position, 
-                                s.Position, 
-                                myRobot.Energy - Details.EnergyLossToCreateNewRobot) < 4) //TODO: replace with a constant
-                    .GroupBy(s => CanGetToWith(myRobotCloneLikeChild.Position, robots, myRobotCloneLikeChild))
-                    .OrderBy(el => el.Key)
-                    .ToArray();
+                Position = map.FindFreeCell(myRobot.Position, robots),
+            };
+            var recomendedStationPathCosts = Intelligence.StationsCanBeOccupied(map, robots, myRobot)
+                .Where(
+                    s => DirectionHelper.FindStepNumber(
+                            myRobotCloneLikeChild.Position, 
+                            s.Position, 
+                            myRobot.Energy - Details.EnergyLossToCreateNewRobot
+                    ) <= Details.MaxStepsForChild
+                ) 
+                .GroupBy(s => CanGetToWith(myRobotCloneLikeChild.Position, robots, myRobotCloneLikeChild))
+                .OrderBy(el => el.Key)
+                .ToArray();
 
-                if (recomendedStationPathCosts.Length == 0)
-                    return false;
-
-                bool res = recomendedStationPathCosts.
-                    Any(g => g.Count() > 0);
-
-                return res;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Can't execute MinEnergyFromHereToStation:" + ex.Message);
-            }
+            return recomendedStationPathCosts.
+                Any(g => g.Count() > 0);
         }
     }
 }
