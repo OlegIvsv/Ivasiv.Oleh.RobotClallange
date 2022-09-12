@@ -64,7 +64,10 @@ namespace Ivasiv.Oleh.RobotClallange.Helpers
                     s => DirectionHelper.FindStepNumber(
                             myRobotCloneLikeChild.Position, 
                             s.Position, 
-                            myRobot.Energy - Details.EnergyLossToCreateNewRobot 
+                            myRobot.Energy
+                                - Details.LeaveForChildJustInCase //the only place it is taken into account
+                                - Details.LeaveForParent
+                                - Details.EnergyLossToCreateNewRobot 
                                 - (Intelligence.IsFreeStation(s, myRobotCloneLikeChild, robots) ? 0 : Details.AttackEnergyLoss)
                     ) <= Details.MaxStepsForChild
                 ) 

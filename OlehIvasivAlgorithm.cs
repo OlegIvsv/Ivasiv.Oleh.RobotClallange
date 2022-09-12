@@ -69,7 +69,7 @@ namespace Ivasiv.Oleh.RobotClallange
                 return null;
             if (Intelligence.Family(CurrentRobots, myRobot).Count() >= Details.FamilySizeLimit)
                 return null;
-            if (myRobot.Energy < Details.EnergyLossToCreateNewRobot)
+            if (myRobot.Energy <= Details.EnergyLossToCreateNewRobot + Details.LeaveForParent)
                 return null;
 
             return IfChildCanBeCreated(myRobot);
@@ -78,7 +78,10 @@ namespace Ivasiv.Oleh.RobotClallange
         protected CreateNewRobotCommand IfChildCanBeCreated(Robot.Common.Robot myRobot)
         {
             bool childCanSurvive = EnergyHelper.ChildCanSurvive(CurrentMap, myRobot, CurrentRobots);
-            int childNeed = myRobot.Energy - Details.EnergyLossToCreateNewRobot - 1;
+            int childNeed = myRobot.Energy 
+                - Details.EnergyLossToCreateNewRobot 
+                - Details.LeaveForParent
+                - 1;
             return CreateCommandForChildCreting(childCanSurvive, childNeed);
         }
 
@@ -103,6 +106,7 @@ namespace Ivasiv.Oleh.RobotClallange
         protected bool ShouldChange(EnergyStation currentStation, EnergyStation newStation)
         {
             bool shouldChange = false;
+
 
             if(newStation == null)
                 return false;
