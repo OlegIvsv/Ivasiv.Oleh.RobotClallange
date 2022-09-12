@@ -58,9 +58,9 @@ namespace Ivasiv.Oleh.RobotClallange
             throw new Exception();
         }
 
-        //TODO: check if the cell is occupied not to attack
-        //TODO: check if the station have no energy
-        //TODO: fix not enough energy to collect resource
+
+
+
         protected CreateNewRobotCommand IfCreateNewRobot(Robot.Common.Robot myRobot)
         {
             if (Details.CurrentRound > Details.StopCreatingChildsAfter)
@@ -90,7 +90,8 @@ namespace Ivasiv.Oleh.RobotClallange
         }
 
 
-        //TODO: take into account station radius
+
+
         protected RobotCommand IfLookForEnergy(Robot.Common.Robot myRobot)
         {
             var mostBeneficialStation = EnergyHelper.MostBenneficialStation(CurrentMap, myRobot, CurrentRobots);
@@ -121,7 +122,7 @@ namespace Ivasiv.Oleh.RobotClallange
             if (shouldChange)
             {
                 var newPosition = DirectionHelper.NextPosition(robot, stationPos);
-                SetAim(stationPos, newPosition, robot);
+                //SetAim(stationPos, newPosition, robot);
                 return new MoveCommand()
                 {
                     NewPosition = DirectionHelper.NextPosition(robot, stationPos)
