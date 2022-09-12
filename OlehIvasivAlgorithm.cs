@@ -112,7 +112,7 @@ namespace Ivasiv.Oleh.RobotClallange
                 return false;
 
             shouldChange = currentStation.Energy <= Details.MinEnergyGrowth
-                && newStation.Energy >= 0.5 * Details.MaxStationEnergy;
+                && newStation.Energy >= 0.2 * Details.MaxStationEnergy;
 
             return shouldChange;
         }
