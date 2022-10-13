@@ -100,6 +100,8 @@ namespace Ivasiv.Oleh.RobotClallange
             var mostBeneficialStation = EnergyHelper.MostBenneficialStation(CurrentMap, myRobot, CurrentRobots);
             var currentStation = Intelligence.TheRobotOnAStation(CurrentMap, CurrentRobots, myRobot);
             bool shouldChange = ShouldChange(currentStation, mostBeneficialStation);
+            if (myRobot.Energy <= 1)
+                return new CollectEnergyCommand();
             return CreateCommandForEnergyCollecting(shouldChange, mostBeneficialStation?.Position, myRobot);
         }
 
@@ -126,24 +128,12 @@ namespace Ivasiv.Oleh.RobotClallange
             if (shouldChange)
             {
                 var newPosition = DirectionHelper.NextPosition(robot, stationPos);
-                //SetAim(stationPos, newPosition, robot);
                 return new MoveCommand()
                 {
                     NewPosition = DirectionHelper.NextPosition(robot, stationPos)
                 };
             }
             return new CollectEnergyCommand();
-        }
-
-        protected void SetAim(Position aimPosition, Position newPosition, Robot.Common.Robot robot)
-        {
-            int robotIndex = CurrentRobots.IndexOf(robot);
-            Aims.Remove(robotIndex);
-            
-            if (aimPosition == newPosition)
-                return;
-            
-            Aims.Add(robotIndex, aimPosition);
         }
     }
 }
